@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Trading Arena</title>
+<style>
+:root{--bg:#0b1020;--panel:#121a2d;--panel2:#17223a;--line:#263653;--text:#edf3ff;--muted:#91a0ba;--accent:#6ea8fe;--good:#49d18d;--warn:#ffc857;--bad:#ff6678;--purple:#a98bff}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(145deg,#080d19,#0e1527 55%,#0a1020);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif}
+.wrap{max-width:1280px;margin:auto;padding:24px}.top{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:22px}.brand{font-size:26px;font-weight:850;letter-spacing:.5px}.brand span{color:var(--accent)}.sub{color:var(--muted);font-size:13px;margin-top:3px}
+button,input,select{font:inherit}button{border:0;border-radius:10px;padding:10px 14px;color:white;background:#263755;cursor:pointer;font-weight:700}button:hover{filter:brightness(1.15)}.primary{background:#376fd4}.danger{background:#6d2635}.ghost{background:transparent;border:1px solid var(--line)}
+.grid{display:grid;gap:14px}.cards{grid-template-columns:repeat(5,1fr)}.card{background:rgba(18,26,45,.9);border:1px solid var(--line);border-radius:16px;padding:18px;box-shadow:0 12px 35px rgba(0,0,0,.15)}.label{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:1px}.big{font-size:28px;font-weight:850;margin-top:8px}.small{font-size:12px;color:var(--muted);margin-top:5px}
+.progress{height:9px;background:#202c45;border-radius:99px;overflow:hidden;margin-top:12px}.progress i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--purple));border-radius:99px}
+.two{grid-template-columns:1.25fr .75fr;margin-top:14px}.panel{background:rgba(18,26,45,.92);border:1px solid var(--line);border-radius:16px;padding:18px}.panel h2{font-size:16px;margin:0 0 14px}.toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:end}.field{display:flex;flex-direction:column;gap:5px}.field label{font-size:11px;color:var(--muted)}input,select{background:#0d1526;color:var(--text);border:1px solid var(--line);border-radius:9px;padding:10px 11px;outline:none}input:focus,select:focus{border-color:var(--accent)}
+.scoregrid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.scorebox{background:#0d1526;border:1px solid var(--line);border-radius:12px;padding:12px}.scorebox b{font-size:13px}.scorebuttons{display:flex;gap:5px;margin-top:9px}.scorebuttons button{padding:7px 9px;font-size:12px;background:#202d46}.scorebuttons button.sel{background:var(--accent);color:#061126}.scorebuttons button.na.sel{background:#59677f;color:white}
+.formgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.full{grid-column:1/-1}.actions{display:flex;gap:8px;margin-top:12px}.sessionbar{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}.pill{display:inline-flex;align-items:center;gap:6px;border-radius:99px;padding:5px 9px;font-size:11px;font-weight:800;background:#202d46}.live{color:#7df0b4}.sim{color:#86b7ff}
+table{width:100%;border-collapse:collapse;font-size:12px}th,td{text-align:left;padding:9px 7px;border-bottom:1px solid #202d46}th{color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.7px}.score{font-weight:850}.good{color:var(--good)}.bad{color:var(--bad)}.muted{color:var(--muted)}
+.component{display:grid;grid-template-columns:150px 1fr 60px;gap:10px;align-items:center;margin:12px 0}.bar{height:10px;background:#202c45;border-radius:99px;overflow:hidden}.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--purple))}
+.badges{display:flex;flex-wrap:wrap;gap:8px}.badge{padding:9px 10px;border:1px solid var(--line);border-radius:11px;background:#0d1526;font-size:12px}.badge strong{display:block}.notice{padding:12px;border:1px solid #334463;background:#0e172a;border-radius:12px;color:var(--muted);font-size:12px}
+.footer{color:var(--muted);font-size:11px;text-align:center;padding:22px 0}
+@media(max-width:900px){.cards{grid-template-columns:repeat(2,1fr)}.two{grid-template-columns:1fr}.scoregrid,.formgrid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:600px){.wrap{padding:12px}.cards{grid-template-columns:1fr 1fr}.scoregrid,.formgrid{grid-template-columns:1fr}.top{align-items:flex-start;flex-direction:column}.component{grid-template-columns:115px 1fr 50px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div><div class="brand">TRADING <span>ARENA</span></div><div class="sub">Execution over outcome. Build the skill.</div></div>
+    <div class="toolbar">
+      <button class="primary" onclick="newSession()">+ New Session</button>
+      <button onclick="exportCSV()">Export CSV</button>
+      <button onclick="exportXLSX()">Export Excel</button>
+      <button class="danger" onclick="clearAll()">Reset All Data</button>
+    </div>
+  </div>
+
+  <div class="grid cards">
+    <div class="card"><div class="label">Level</div><div class="big" id="level">1 — Rookie</div><div class="progress"><i id="xpbar"></i></div><div class="small" id="xptext">0 XP</div></div>
+    <div class="card"><div class="label">Current Streak</div><div class="big" id="streak">0</div><div class="small">trades without a 0</div></div>
+    <div class="card"><div class="label">Period Execution</div><div class="big" id="periodScore">—</div><div class="small" id="periodMeta">Choose a date range</div></div>
+    <div class="card"><div class="label">Trades</div><div class="big" id="tradeCount">0</div><div class="small">in selected range</div></div>
+    <div class="card"><div class="label">P&L</div><div class="big" id="pnl">$0.00</div><div class="small">recorded separately from score</div></div>
+  </div>
+
+  <div class="panel" style="margin-top:14px">
+    <div class="sessionbar"><h2>Date Range & Filters</h2><span class="pill" id="rangePill">All data</span></div>
+    <div class="toolbar">
+      <div class="field"><label>From</label><input type="date" id="from"></div>
+      <div class="field"><label>To</label><input type="date" id="to"></div>
+      <div class="field"><label>Session type</label><select id="typeFilter"><option value="ALL">LIVE + SIM</option><option value="LIVE">LIVE only</option><option value="SIM">SIM only</option></select></div>
+      <button class="primary" onclick="applyFilters()">Apply</button>
+      <button class="ghost" onclick="setRange(7)">Last 7 days</button>
+      <button class="ghost" onclick="setRange(30)">Last 30 days</button>
+      <button class="ghost" onclick="setRange(0)">All time</button>
+    </div>
+  </div>
+
+  <div class="grid two">
+    <div class="panel">
+      <h2 id="sessionTitle">Current Session</h2>
+      <div id="sessionForm">
+        <div class="formgrid">
+          <div class="field"><label>Session date</label><input type="date" id="sessionDate"></div>
+          <div class="field"><label>Session type</label><select id="sessionType"><option>LIVE</option><option>SIM</option></select></div>
+          <div class="field"><label>P&L</label><input type="number" step="0.01" id="sessionPnl" placeholder="Optional"></div>
+          <div class="field"><label>Session note</label><input id="sessionNote" placeholder="Optional"></div>
+        </div>
+        <div class="actions"><button class="primary" onclick="saveSession()">Save / Start Session</button></div>
+      </div>
+      <div id="tradeEntry" style="display:none;margin-top:16px">
+        <div class="notice">Score each component using the fixed definitions. <b>0 = poor</b>, <b>1 = acceptable</b>, <b>2 = excellent</b>. Use <b>N/A</b> only when a component genuinely did not apply. For example, <b>Cut Loss Early</b> can be N/A when the trade never became a losing trade.</div>
+        <div class="formgrid" style="margin-top:12px">
+          <div class="field"><label>Ticker</label><input id="ticker" placeholder="e.g. ABCD"></div>
+          <div class="field"><label>Trade P&L</label><input type="number" step="0.01" id="tradePnl" placeholder="Optional"></div>
+          <div class="field"><label>Hold time (sec)</label><input type="number" step="1" id="hold" placeholder="Optional"></div>
+          <div class="field"><label>Type of trade</label><select id="tradeType"><option value="Dip Next Two">Dip Next Two</option><option value="Halt">Halt</option><option value="Breach">Breach</option><option value="Parabolic Move Up">Parabolic Move Up</option><option value="Next Candle High">Next Candle High</option><option value="Dip Open Two">Dip Open Two</option></select></div>
+        </div>
+        <div class="scoregrid" style="margin-top:12px">
+          <div class="scorebox"><b>🧠 Stock Selection</b><div class="scorebuttons" data-key="selection"><button data-v="0">0</button><button data-v="1">1</button><button data-v="2">2</button></div></div>
+          <div class="scorebox"><b>🎯 Buy-In Area</b><div class="scorebuttons" data-key="buy"><button data-v="0">0</button><button data-v="1">1</button><button data-v="2">2</button></div></div>
+          <div class="scorebox"><b>🛡️ Cut Loss Early</b><div class="scorebuttons" data-key="cut"><button data-v="0">0</button><button data-v="1">1</button><button class="na" data-v="NA">N/A</button><button data-v="2">2</button></div></div>
+          <div class="scorebox"><b>🚀 Let Winners Run</b><div class="scorebuttons" data-key="run"><button data-v="0">0</button><button data-v="1">1</button><button class="na" data-v="NA">N/A</button><button data-v="2">2</button></div></div>
+        </div>
+        <div class="actions"><button class="primary" id="addTradeBtn" onclick="addTrade()">Add Trade</button><button class="ghost" onclick="finishSession()">Finish Session</button></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Current Session Score</h2>
+      <div id="currentScore" class="big">—</div>
+      <div class="small" id="currentGrade">No session started</div>
+      <div id="components"></div>
+      <div style="margin-top:16px" class="badges" id="achievements"></div>
+    </div>
+  </div>
+
+  <div class="panel" style="margin-top:14px">
+    <div class="sessionbar"><h2>Trade Log</h2><span class="pill" id="livePill">No active session</span></div>
+    <div style="overflow:auto"><table><thead><tr><th>#</th><th>Date</th><th>Mode</th><th>Trade Type</th><th>Ticker</th><th>Selection</th><th>Buy</th><th>Cut</th><th>Run</th><th>Score</th><th>P&L</th><th>XP</th><th>Actions</th></tr></thead><tbody id="tradeTable"></tbody></table></div>
+  </div>
+
+  <div class="grid two">
+    <div class="panel"><h2>Selected Period — Component Performance</h2><div id="analytics"></div></div>
+    <div class="panel"><h2>Performance Summary</h2><div id="summary"></div></div>
+  </div>
+
+  <div class="footer">Local & Firebase Cloud Tracker • Trading Arena</div>
+</div>
+
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+<script>
+// Firebase Config
+const firebaseConfig = {
+  apiKey: "AIzaSyB_C2qzHYIXfEMRz_wYgipc7TXA6ag-oD4",
+  authDomain: "tradingarena-8d915.firebaseapp.com",
+  projectId: "tradingarena-8d915",
+  storageBucket: "tradingarena-8d915.firebasestorage.app",
+  messagingSenderId: "48436551432",
+  appId: "1:48436551432:web:4c9c17a749ab9b69edd6bd",
+  measurementId: "G-HG37SY0XGT"
+};
+
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+const cloudDb = firebase.firestore();
+
+// Offline persistence & real-time sync setup for mobile browsers
+cloudDb.enablePersistence({synchronizeTabs:true}).catch(err => console.log("Persistence info:", err.code));
+
+const KEY="tradingArena_v1";
+let db=JSON.parse(localStorage.getItem(KEY)||'{"sessions":[],"trades":[]}');
+let activeSession=null;
+let editingTradeId=null;
+let filter={from:"",to:"",type:"ALL"};
+
+const defs={selection:"Stock Selection",buy:"Buy-In Area",cut:"Cut Loss Early",run:"Let Winners Run"};
+const levels=[["Rookie",0],["Apprentice",500],["Operator",1500],["Sniper",3000],["Elite",5000],["Master",7500]];
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const today=()=>new Date().toISOString().slice(0,10);
+
+function saveDB(){
+  localStorage.setItem(KEY,JSON.stringify(db));
+  cloudDb.collection("user_data").doc("trading_arena").set(db)
+    .then(() => console.log("Synced to Firebase"))
+    .catch(err => console.error("Firebase Sync Error:", err));
+}
+
+// Real-time Firestore sync listener
+function initRealtimeSync(){
+  cloudDb.collection("user_data").doc("trading_arena").onSnapshot((doc) => {
+    if (doc.exists) {
+      db = doc.data();
+      localStorage.setItem(KEY, JSON.stringify(db));
+      render();
+    }
+  }, err => console.error("Realtime sync error:", err));
+}
+
+// Trigger render when returning to app tab on mobile
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible") {
+    render();
+  }
+});
+
+function xpFor(t){let vals=Object.values(t.scores).filter(v=>v!=="NA");let pts=vals.reduce((a,b)=>a+Number(b),0);return pts*10+(pts===vals.length*2?10:0)}
+function calcScore(ts){let total=0,avail=0;ts.forEach(t=>Object.values(t.scores).forEach(v=>{if(v!=="NA"){total+=+v;avail+=2}}));return avail?total/avail*100:null}
+function grade(p){if(p===null)return "—";if(p>=95)return "S";if(p>=90)return "A";if(p>=80)return "B";if(p>=70)return "C";if(p>=60)return "D";return "F"}
+function setRange(days){let d=new Date();filter.to=today();if(days===0)filter.from="";else{d.setDate(d.getDate()-days+1);filter.from=d.toISOString().slice(0,10)}document.getElementById("from").value=filter.from;document.getElementById("to").value=filter.to;document.getElementById("typeFilter").value=filter.type;render();}
+function applyFilters(){filter.from=document.getElementById("from").value;filter.to=document.getElementById("to").value;filter.type=document.getElementById("typeFilter").value;render();}
+function filteredTrades(){return db.trades.filter(t=>(!filter.from||t.date>=filter.from)&&(!filter.to||t.date<=filter.to)&&(filter.type==="ALL"||t.type===filter.type))}
+function newSession(){activeSession=null;editingTradeId=null;document.getElementById("addTradeBtn").textContent="Add Trade";document.getElementById("sessionDate").value=today();document.getElementById("sessionType").value="LIVE";document.getElementById("sessionPnl").value="";document.getElementById("sessionNote").value="";document.getElementById("tradeEntry").style.display="none";document.getElementById("sessionTitle").textContent="New Session";document.getElementById("livePill").textContent="No active session";renderCurrent();}
+function saveSession(){
+  if(activeSession){alert("A session is already active. Finish it first.");return}
+  activeSession={id:uid(),date:document.getElementById("sessionDate").value||today(),type:document.getElementById("sessionType").value,pnl:Number(document.getElementById("sessionPnl").value||0),note:document.getElementById("sessionNote").value||"",created:new Date().toISOString()};
+  db.sessions.push(activeSession);saveDB();
+  document.getElementById("tradeEntry").style.display="block";document.getElementById("sessionTitle").textContent="Session • "+activeSession.date;document.getElementById("livePill").textContent=activeSession.type+" • "+activeSession.date;renderCurrent();render();
+}
+function chooseScore(e){let btn=e.target.closest("button");if(!btn)return;btn.parentElement.querySelectorAll("button").forEach(b=>b.classList.remove("sel"));btn.classList.add("sel")}
+document.querySelectorAll(".scorebuttons").forEach(x=>x.addEventListener("click",chooseScore));
+function selected(key){let b=document.querySelector(`.scorebuttons[data-key="${key}"] .sel`);return b?b.dataset.v:null}
+
+function addTrade(){
+ let tradeDate = document.getElementById("sessionDate").value || (activeSession && activeSession.date) || today();
+ if(activeSession){
+   activeSession.date = tradeDate;
+   document.getElementById("sessionTitle").textContent = "Session • " + tradeDate;
+   document.getElementById("livePill").textContent = activeSession.type + " • " + tradeDate;
+ }
+ let scores={selection:selected("selection"),buy:selected("buy"),cut:selected("cut"),run:selected("run")};
+ if(Object.values(scores).some(v=>v===null)){alert("Score all four components. Use N/A only when that component genuinely did not apply.");return}
+
+ if(editingTradeId){
+   let t = db.trades.find(x => x.id === editingTradeId);
+   if(t){
+     t.date = tradeDate;
+     t.tradeType = document.getElementById("tradeType").value;
+     t.ticker = (document.getElementById("ticker").value||"").toUpperCase();
+     t.scores = scores;
+     t.pnl = Number(document.getElementById("tradePnl").value||0);
+     t.hold = Number(document.getElementById("hold").value||0);
+   }
+   editingTradeId = null;
+   document.getElementById("addTradeBtn").textContent = "Add Trade";
+ } else {
+   if(!activeSession){alert("Start a session first.");return}
+   let t={id:uid(),sessionId:activeSession.id,date:tradeDate,type:activeSession.type,tradeType:document.getElementById("tradeType").value,ticker:(document.getElementById("ticker").value||"").toUpperCase(),scores,pnl:Number(document.getElementById("tradePnl").value||0),hold:Number(document.getElementById("hold").value||0)};
+   db.trades.push(t);
+ }
+ saveDB();
+ document.getElementById("ticker").value="";document.getElementById("tradePnl").value="";document.getElementById("hold").value="";document.getElementById("tradeType").selectedIndex=0;
+ document.querySelectorAll(".scorebuttons button").forEach(b=>b.classList.remove("sel"));render();
+}
+
+function editTrade(id){
+ let t = db.trades.find(x => x.id === id);
+ if(!t) return;
+ editingTradeId = id;
+ document.getElementById("tradeEntry").style.display = "block";
+ document.getElementById("ticker").value = t.ticker || "";
+ document.getElementById("tradePnl").value = t.pnl || "";
+ document.getElementById("hold").value = t.hold || "";
+ document.getElementById("tradeType").value = t.tradeType || "Dip Next Two";
+ 
+ Object.keys(defs).forEach(k => {
+   let val = t.scores[k];
+   let group = document.querySelector(`.scorebuttons[data-key="${k}"]`);
+   if(group){
+     group.querySelectorAll("button").forEach(b => b.classList.remove("sel"));
+     let targetBtn = group.querySelector(`button[data-v="${val}"]`);
+     if(targetBtn) targetBtn.classList.add("sel");
+   }
+ });
+
+ document.getElementById("addTradeBtn").textContent = "Update Trade";
+ document.getElementById("tradeEntry").scrollIntoView({ behavior: 'smooth' });
+}
+
+function deleteTrade(id){
+ if(confirm("Are you sure you want to delete this trade?")){
+   db.trades = db.trades.filter(t => t.id !== id);
+   if(editingTradeId === id){
+     editingTradeId = null;
+     document.getElementById("addTradeBtn").textContent = "Add Trade";
+   }
+   saveDB();
+   render();
+ }
+}
+
+function finishSession(){if(!activeSession)return;activeSession=null;editingTradeId=null;document.getElementById("addTradeBtn").textContent="Add Trade";document.getElementById("tradeEntry").style.display="none";document.getElementById("livePill").textContent="Session finished";renderCurrent();render();}
+function sessionTrades(){return activeSession?db.trades.filter(t=>t.sessionId===activeSession.id):[]}
+function renderCurrent(){
+ let ts=sessionTrades(),p=calcScore(ts);document.getElementById("currentScore").textContent=p===null?"—":p.toFixed(1)+"%";document.getElementById("currentGrade").textContent=p===null?"No trades yet":"Grade "+grade(p)+" • "+ts.length+" trades";
+ let el=document.getElementById("components");el.innerHTML="";
+ Object.entries(defs).forEach(([k,n])=>{let a=0,b=0;ts.forEach(t=>{let v=t.scores[k];if(v!=="NA"){a+=+v;b+=2}});let p=b?a/b*100:null;el.innerHTML+=`<div class="component"><span>${n}</span><div class="bar"><i style="width:${p||0}%"></i></div><b>${p===null?"—":p.toFixed(0)+"%"}</b></div>`});
+ let perfect=ts.filter(t=>Object.values(t.scores).filter(v=>v!=="NA").every(v=>+v===2)).length, breaks=ts.filter(t=>Object.values(t.scores).some(v=>v==="0")).length;
+ document.getElementById("achievements").innerHTML=`<div class="badge">🏆 <strong>${perfect} A+ trades</strong></div><div class="badge">💀 <strong>${breaks} process breaks</strong></div><div class="badge">🎯 <strong>${ts.filter(t=>t.scores.buy==="2").length} sniper entries</strong></div><div class="badge">🛡️ <strong>${ts.filter(t=>t.scores.cut==="2").length} clean cuts</strong></div><div class="badge">🚀 <strong>${ts.filter(t=>t.scores.run==="2").length} runners</strong></div>`;
+}
+function render(){
+ let ts=filteredTrades(),p=calcScore(ts),xp=db.trades.reduce((a,t)=>a+xpFor(t),0);
+ let li=levels.reduce((a,l)=>xp>=l[1]?l:a,levels[0]), next=levels[levels.indexOf(li)+1];document.getElementById("level").textContent=(levels.indexOf(li)+1)+" — "+li[0];document.getElementById("xptext").textContent=xp+" XP"+(next?" • "+(next[1]-xp)+" to "+next[0]:"");document.getElementById("xpbar").style.width=(next?((xp-li[1])/(next[1]-li[1])*100):100)+"%";
+ let sorted=[...db.trades].sort((a,b)=>a.date.localeCompare(b.date)||a.id.localeCompare(b.id)),streak=0;for(let i=sorted.length-1;i>=0;i--){if(Object.values(sorted[i].scores).some(v=>v==="0"))break;streak++}document.getElementById("streak").textContent=streak;
+ document.getElementById("periodScore").textContent=p===null?"—":p.toFixed(1)+"%";document.getElementById("periodMeta").textContent=p===null?"No trades":"Grade "+grade(p);
+ document.getElementById("tradeCount").textContent=ts.length;document.getElementById("pnl").textContent=(ts.reduce((a,t)=>a+t.pnl,0)).toLocaleString("en-GB",{style:"currency",currency:"USD"});
+ document.getElementById("rangePill").textContent=(filter.from||"All")+" → "+(filter.to||"Today")+" • "+filter.type;
+ let body=document.getElementById("tradeTable");body.innerHTML=ts.slice().reverse().map((t,i)=>{let vals=Object.values(t.scores).filter(v=>v!=="NA"),s=vals.reduce((a,b)=>a+Number(b),0)/(vals.length*2)*100;return `<tr><td>${ts.length-i}</td><td>${t.date}</td><td><span class="pill ${t.type==="LIVE"?"live":"sim"}">${t.type}</span></td><td>${t.tradeType||"—"}</td><td><b>${t.ticker||"—"}</b></td><td>${t.scores.selection}</td><td>${t.scores.buy}</td><td>${t.scores.cut}</td><td>${t.scores.run}</td><td class="score ${s>=80?"good":s<60?"bad":""}">${s.toFixed(0)}%</td><td>${t.pnl?("$"+t.pnl.toFixed(2)):"—"}</td><td>${xpFor(t)}</td><td style="white-space:nowrap"><button class="ghost" style="padding:3px 8px;font-size:11px;margin-right:4px" onclick="editTrade('${t.id}')">✏️</button><button class="danger" style="padding:3px 8px;font-size:11px" onclick="deleteTrade('${t.id}')">🗑️</button></td></tr>`}).join("")||`<tr><td colspan="13" class="muted">No trades in this range.</td></tr>`;
+ renderAnalytics(ts);renderCurrent();
+}
+function renderAnalytics(ts){
+ let html="", names={selection:"🧠 Stock Selection",buy:"🎯 Buy-In Area",cut:"🛡️ Cut Loss Early",run:"🚀 Let Winners Run"};
+ Object.entries(names).forEach(([k,n])=>{let vals=ts.map(t=>t.scores[k]).filter(v=>v!=="NA");let p=vals.length?vals.reduce((a,v)=>a+Number(v),0)/(vals.length*2)*100:null;html+=`<div class="component"><span>${n}</span><div class="bar"><i style="width:${p||0}%"></i></div><b>${p===null?"—":p.toFixed(1)+"%"}</b></div>`});
+ document.getElementById("analytics").innerHTML=html;
+ let live=ts.filter(t=>t.type==="LIVE"),sim=ts.filter(t=>t.type==="SIM"),fmt=a=>{let p=calcScore(a);return p===null?"—":p.toFixed(1)+"% ("+a.length+")"};document.getElementById("summary").innerHTML=`<div class="notice"><b>LIVE</b><br>${fmt(live)}<br><br><b>SIM</b><br>${fmt(sim)}<br><br><b>Overall grade</b><br>${grade(calcScore(ts))}<br><br><b>A+ trades</b><br>${ts.filter(t=>Object.values(t.scores).filter(v=>v!=="NA").every(v=>+v===2)).length}<br><br><b>Process breaks</b><br>${ts.filter(t=>Object.values(t.scores).some(v=>v==="0")).length}</div>`;
+}
+function csvEscape(v){v=String(v??"");return `"${v.replaceAll('"','""')}"`}
+function exportCSV(){let rows=[["ID","Date","Mode","Trade Type","Ticker","Stock Selection","Buy-In Area","Cut Loss Early","Let Winners Run","Execution %","P&L","Hold Seconds"]];db.trades.forEach(t=>{let vals=Object.values(t.scores).filter(v=>v!=="NA"),s=vals.reduce((a,b)=>a+Number(b),0)/(vals.length*2)*100;rows.push([t.id,t.date,t.type,t.tradeType||"",t.ticker,t.scores.selection,t.scores.buy,t.scores.cut,t.scores.run,s.toFixed(2),t.pnl,t.hold])});let blob=new Blob([rows.map(r=>r.map(csvEscape).join(",")).join("\n")],{type:"text/csv"});download(blob,"trading_arena_trades.csv")}
+function exportXLSX(){
+ let rows=db.trades.map(t=>{let vals=Object.values(t.scores).filter(v=>v!=="NA"),s=vals.reduce((a,b)=>a+Number(b),0)/(vals.length*2)*100;return [t.id,t.date,t.type,t.tradeType||"",t.ticker,t.scores.selection,t.scores.buy,t.scores.cut,t.scores.run,s.toFixed(2),t.pnl,t.hold]});
+ let html='<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel"><head><meta charset="UTF-8"></head><body><table><tr><th>ID</th><th>Date</th><th>Mode</th><th>Trade Type</th><th>Ticker</th><th>Stock Selection</th><th>Buy-In Area</th><th>Cut Loss Early</th><th>Let Winners Run</th><th>Execution %</th><th>P&L</th><th>Hold Seconds</th></tr>'+rows.map(r=>'<tr>'+r.map(v=>'<td>'+String(v??"").replaceAll('&','&amp;').replaceAll('<','&lt;')+'</td>').join('')+'</tr>').join('')+'</table></body></html>';
+ download(new Blob([html],{type:"application/vnd.ms-excel"}),"trading_arena_export.xls");
+}
+function download(blob,name){let a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
+function clearAll(){if(confirm("Delete ALL Trading Arena data? Export first if you need a backup.")){localStorage.removeItem(KEY);cloudDb.collection("user_data").doc("trading_arena").delete();location.reload()}}
+
+document.getElementById("sessionDate").value=today();
+setRange(30);
+initRealtimeSync();
+</script>
+</body>
+</html>
